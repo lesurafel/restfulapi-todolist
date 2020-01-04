@@ -1,14 +1,3 @@
-
-
-// Add a "checked" symbol when clicking on a list item
-var list = document.querySelector('ul');
-list.addEventListener('click', function(ev) {
-  if (ev.target.tagName === 'LI') {
-    ev.target.classList.toggle('checked');
-  }
-}, false);
-
-//==========================================
 $(document).ready(function(){
   var getAndDisplayAllTasks = function () {
     $('#todo-list').children().remove();
@@ -18,7 +7,7 @@ $(document).ready(function(){
       dataType: 'json',
       success: function (response, textStatus) {
         response.tasks.forEach(function (task) {
-          $('#todo-list').append('<li>' + task.content + '<span data-id ="' + task.id + '" class="delete">\u00D7</span></li>');
+          $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
         })
       },
       error: function (request, textStatus, errorMessage) {
@@ -62,6 +51,34 @@ $(document).ready(function(){
     });
   }
 
+  var markTaskComplete = function (id) {
+    $.ajax({
+      type: 'PUT',
+      url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + id + '/mark_complete?api_key=94',
+      dataType: 'json',
+      success: function (response, textStatus) {
+        getAndDisplayAllTasks();
+      },
+      error: function (request, textStatus, errorMessage) {
+        console.log(errorMessage);
+      }
+    });
+  }
+
+  var markTaskActive = function (id) {
+    $.ajax({
+      type: 'PUT',
+      url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + id + '/mark_active?api_key=94',
+      dataType: 'json',
+      success: function (response, textStatus) {
+        getAndDisplayAllTasks();
+      },
+      error: function (request, textStatus, errorMessage) {
+        console.log(errorMessage);
+      }
+    });
+  }
+
   $(document).on('click', '#addBtn', function (event) {
     event.preventDefault();
     createTask();
@@ -71,6 +88,16 @@ $(document).ready(function(){
     deleteTask($(this).data('id'));
   });
 
+  $(document).on('click', 'li', function () {
+    if (this.className === 'checked') {
+      markTaskActive($(this).data('id'));
+      this.className = '';
+    } else {
+      markTaskComplete($(this).data('id'));
+      this.className = 'checked';
+    }
+  });
+  
   getAndDisplayAllTasks();
 
 });
