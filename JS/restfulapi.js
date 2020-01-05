@@ -1,6 +1,5 @@
 
 var viewTasks = "all";
-var completedId = [];
 $(document).ready(function(){
   var getAndDisplayAllTasks = function () {
     $('#todo-list').children().remove();
@@ -82,9 +81,12 @@ $(document).ready(function(){
               type: 'DELETE',
               url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + task.id + '?api_key=94'
             });
+          } else {
+            continue;
           }
+          getAndDisplayAllTasks();
         })
-        getAndDisplayAllTasks();
+        //getAndDisplayAllTasks();
       },
       error: function (request, textStatus, errorMessage) {
         console.log(errorMessage);
@@ -161,7 +163,9 @@ $(document).ready(function(){
 
   $(document).on('click', '.clearCompleted', function (event) {
     event.stopPropagation();
+    event.preventDefault();
     deleteCompletedTasks();
+    getAndDisplayAllTasks();
   });
 
   getAndDisplayAllTasks();
