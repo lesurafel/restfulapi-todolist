@@ -82,3 +82,31 @@ input {
   transition: 0.3s;
   border-radius: 0;
 }
+
+.bottomMenu,
+a {
+  position: relative;
+  padding: 12px 8px 12px 40px;
+  background: #2c3e50;
+  font-size: 18px;
+  height: 50px;
+  color: white;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+a:hover {
+  color: inherit;
+}
+
+.all,
+.active,
+.complete {
+  margin-left: 50px;
+}
+
+.clearCompleted {
+  float: right;
+}
