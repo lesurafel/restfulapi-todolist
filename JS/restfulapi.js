@@ -1,21 +1,27 @@
 
 var viewTasks = "all";
+var allCompletedTasks = [];
 $(document).ready(function(){
   var getAndDisplayAllTasks = function () {
-    $('#todo-list').children().remove();
-    $('#menu').children().remove();
     $.ajax({
       type: 'GET',
       url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=94',
       dataType: 'json',
       success: function (response, textStatus) {
-        if (response.tasks.length) {
+        allCompletedTasks = [];
+        $('#todo-list').children().remove();
+        $('#menu').children().remove();
+        if (response.tasks.length>0) {
           $('#menu').append('<div class="bottomMenu"><span>' + response.tasks.length + ' Item left</span><span class="all"><a href="#">All</a></span>' +
           '<span class="active"><a href="#">Active</a></span>' +
           '<span class="complete"><a href="#">Complete</a></span>' +
           '<span class="clearCompleted"><a href="#">Clear Completed Tasks</a></span></div>');
         }
         response.tasks.forEach(function (task) {
+          if (task.completed === true) {
+            allCompletedTasks.push(task.id);
+          }
+
           if (viewTasks === 'all') {
             $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
           } else if (viewTasks === 'complete') {
@@ -70,28 +76,19 @@ $(document).ready(function(){
   }
 
   var deleteCompletedTasks = function () {
-    $.ajax({
-      type: 'GET',
-      url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=94',
-      dataType: 'json',
-      success: function (response, textStatus) {
-        response.tasks.forEach(function (task) {
-          if (task.completed === true) {
-            $.ajax({
-              type: 'DELETE',
-              url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + task.id + '?api_key=94'
-            });
-          } else {
-            continue;
-          }
+    for (var i = 0; i<allCompletedTasks.length; i++) {
+      $.ajax({
+        type: 'DELETE',
+        url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + allCompletedTasks[i] + '?api_key=94',
+        dataType: 'json',
+        success: function (response, textStatus) {
           getAndDisplayAllTasks();
-        })
-        //getAndDisplayAllTasks();
-      },
-      error: function (request, textStatus, errorMessage) {
-        console.log(errorMessage);
-      }
-    });
+        },
+        error: function (request, textStatus, errorMessage) {
+          console.log(errorMessage);
+        }
+      });
+    }
   }
 
   var markTaskComplete = function (id) {
@@ -162,10 +159,10 @@ $(document).ready(function(){
   });
 
   $(document).on('click', '.clearCompleted', function (event) {
+    getAndDisplayAllTasks();
     event.stopPropagation();
     event.preventDefault();
     deleteCompletedTasks();
-    getAndDisplayAllTasks();
   });
 
   getAndDisplayAllTasks();
