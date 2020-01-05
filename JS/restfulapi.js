@@ -1,13 +1,33 @@
+
+var viewTasks = "all";
+var completedId = [];
 $(document).ready(function(){
   var getAndDisplayAllTasks = function () {
     $('#todo-list').children().remove();
+    $('#menu').children().remove();
     $.ajax({
       type: 'GET',
       url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=94',
       dataType: 'json',
       success: function (response, textStatus) {
+        if (response.tasks.length) {
+          $('#menu').append('<div class="bottomMenu"><span>' + response.tasks.length + ' Item left</span><span class="all"><a href="#">All</a></span>' +
+          '<span class="active"><a href="#">Active</a></span>' +
+          '<span class="complete"><a href="#">Complete</a></span>' +
+          '<span class="clearCompleted"><a href="#">Clear Completed Tasks</a></span></div>');
+        }
         response.tasks.forEach(function (task) {
-          $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
+          if (viewTasks === 'all') {
+            $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
+          } else if (viewTasks === 'complete') {
+            if (task.completed === true) {
+              $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
+            }
+          } else {
+            if (task.completed === false) {
+              $('#todo-list').append('<li data-id ="' + task.id + '" class ="' + (task.completed ? 'checked' : '') + '">' + task.content + '<span class="delete">\u00D7</span></li>');
+            }
+          }
         })
       },
       error: function (request, textStatus, errorMessage) {
@@ -25,7 +45,6 @@ $(document).ready(function(){
       data: JSON.stringify({
         task: {
           content: $("#doList").val()
-
         }
       }),
       success: function (response, textStatus) {
@@ -48,6 +67,28 @@ $(document).ready(function(){
         error: function (request, textStatus, errorMessage) {
           console.log(errorMessage);
         }
+    });
+  }
+
+  var deleteCompletedTasks = function () {
+    $.ajax({
+      type: 'GET',
+      url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=94',
+      dataType: 'json',
+      success: function (response, textStatus) {
+        response.tasks.forEach(function (task) {
+          if (task.completed === true) {
+            $.ajax({
+              type: 'DELETE',
+              url: 'https://altcademy-to-do-list-api.herokuapp.com/tasks/' + task.id + '?api_key=94'
+            });
+          }
+        })
+        getAndDisplayAllTasks();
+      },
+      error: function (request, textStatus, errorMessage) {
+        console.log(errorMessage);
+      }
     });
   }
 
@@ -84,11 +125,13 @@ $(document).ready(function(){
     createTask();
   });
 
-  $(document).on('click', '.delete', function () {
-    deleteTask($(this).data('id'));
+  $(document).on('click', '.delete', function (event) {
+    event.stopPropagation();
+    deleteTask($(this).parent().data('id'));
   });
 
-  $(document).on('click', 'li', function () {
+  $(document).on('click', 'li', function (event) {
+    event.preventDefault();
     if (this.className === 'checked') {
       markTaskActive($(this).data('id'));
       this.className = '';
@@ -97,7 +140,30 @@ $(document).ready(function(){
       this.className = 'checked';
     }
   });
-  
+
+  $(document).on('click', '.all', function (event) {
+    event.stopPropagation();
+    viewTasks = "all";
+    getAndDisplayAllTasks();
+  });
+
+  $(document).on('click', '.active', function (event) {
+    event.stopPropagation();
+    viewTasks = "active";
+    getAndDisplayAllTasks();
+  });
+
+  $(document).on('click', '.complete', function (event) {
+    event.stopPropagation();
+    viewTasks = "complete";
+    getAndDisplayAllTasks();
+  });
+
+  $(document).on('click', '.clearCompleted', function (event) {
+    event.stopPropagation();
+    deleteCompletedTasks();
+  });
+
   getAndDisplayAllTasks();
 
 });
